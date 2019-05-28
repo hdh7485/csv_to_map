@@ -18,7 +18,8 @@ def read_csv(file_path):
 def csv_to_gridmap(csv_data):
     header = Header()
     header.seq = "0"
-    header.frame_id = "/csv_map"
+    #header.frame_id = "/csv_map"
+    header.frame_id = "/odom"
     header.stamp = rospy.Time.now()
 
     occupancy_grid = OccupancyGrid()
@@ -38,7 +39,7 @@ def csv_to_gridmap(csv_data):
     grid_list = [0] * int(occupancy_grid.info.width * occupancy_grid.info.height)
     for pose in csv_data:
         index = int(pose[0]/occupancy_grid.info.resolution) * int(occupancy_grid.info.width) + int(pose[1]/occupancy_grid.info.resolution) 
-        print(index)
+        #print(index)
         grid_list[index] = 100
     occupancy_grid.data = grid_list
 
