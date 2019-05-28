@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
+import rospkg
 import csv
 import numpy
 from tf import TransformListener
@@ -12,6 +13,7 @@ from sensor_msgs.msg import PointCloud2
 
 class CSVRepublisher:
     def __init__(self):
+        rospack = rospkg.RosPack()
         rospy.init_node("csv_to_map", anonymous=True)
 
         self.map_pub = rospy.Publisher("/csv_override_map", OccupancyGrid, queue_size=1)
@@ -19,8 +21,10 @@ class CSVRepublisher:
 
         rospy.Subscriber("/local_map", OccupancyGrid, self.map_callback)
 
-        self.left_wall_csv_data = self.read_csv("../csv_map/geofence_left_total.csv")
-        self.right_wall_csv_data = self.read_csv("../csv_map/geofence_right_total.csv")
+        left_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_left_total.csv"
+        right_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_right_total.csv"
+        self.left_wall_csv_data = self.read_csv(left_geofence_path)
+        self.right_wall_csv_data = self.read_csv(right_geofence_path)
         self.entire_csv_data = self.left_wall_csv_data
         [self.entire_csv_data.append(element) for element in self.right_wall_csv_data]
 
@@ -59,11 +63,8 @@ class CSVRepublisher:
             pose.orientation.w = 1
             pose_array.poses.append(pose)
 
-            #index = int(point[1]/map_data.info.resolution) * int(map_data.info.width) + int(point[0]/map_data.info.resolution)
             index = int((point[1] + map_data.info.origin.position.y)/map_data.info.resolution) * int(map_data.info.width) + int((point[0] + map_data.info.origin.position.x)/map_data.info.resolution)
             if index < len(out_data) and index > -len(out_data):
-                rospy.loginfo(index)
-                rospy.loginfo(len(out_data))
                 out_data[index] = 100
         out_map.data = tuple(out_data)
         self.map_pub.publish(out_map)
