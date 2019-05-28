@@ -40,6 +40,7 @@ class CSVRepublisher:
     def map_callback(self, map_data):
         self.map_header = map_data.header;
         self.tf_csv_data = self.csv_transform(self.entire_csv_data)
+
         out_map = map_data
         out_map.header.frame_id = "/base_footprint"
         out_data = list(out_map.data)
@@ -58,8 +59,11 @@ class CSVRepublisher:
             pose.orientation.w = 1
             pose_array.poses.append(pose)
 
-            index = int(point[1]/map_data.info.resolution) * int(map_data.info.width) + int(point[0]/map_data.info.resolution)
-            if index < len(out_data):
+            #index = int(point[1]/map_data.info.resolution) * int(map_data.info.width) + int(point[0]/map_data.info.resolution)
+            index = int((point[1] + map_data.info.origin.position.y)/map_data.info.resolution) * int(map_data.info.width) + int((point[0] + map_data.info.origin.position.x)/map_data.info.resolution)
+            if index < len(out_data) and index > -len(out_data):
+                rospy.loginfo(index)
+                rospy.loginfo(len(out_data))
                 out_data[index] = 100
         out_map.data = tuple(out_data)
         self.map_pub.publish(out_map)
