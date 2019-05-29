@@ -4,6 +4,7 @@ import rospy
 import rospkg
 import csv
 import numpy
+import time
 from tf import TransformListener
 from geometry_msgs.msg import PoseArray
 from geometry_msgs.msg import Pose
@@ -51,8 +52,8 @@ class CSVRepublisher:
         out_data = list(out_map.data)
 
         pose_array = PoseArray()
-
         for point in self.tf_csv_data:    
+            '''
             pose = Pose()
             pose.position.x = point[0]
             pose.position.y = point[1]
@@ -62,22 +63,23 @@ class CSVRepublisher:
             pose.orientation.z = 0
             pose.orientation.w = 1
             pose_array.poses.append(pose)
+            '''
 
             index = int((point[1] - map_data.info.origin.position.y)/map_data.info.resolution) * int(map_data.info.width) + int((point[0] - map_data.info.origin.position.x)/map_data.info.resolution)
 
             #if index < len(out_data) and index > -len(out_data):
             if index < len(out_data) and index >= 0:
-                rospy.loginfo("%d", index)
+                #rospy.loginfo("%d", index)
                 out_data[index] = 100
 
         out_map.data = tuple(out_data)
         self.map_pub.publish(out_map)
-        self.pose_array_pub.publish(pose_array)
+        #self.pose_array_pub.publish(pose_array)
     
     def csv_transform(self, csv_data):
-        self.odom_header.stamp = rospy.Time.now()
+        #self.odom_header.stamp = rospy.Time.now()
         #self.tf_listener.waitForTransform("/base_footprint", "/odom", rospy.Time.now(), rospy.Duration(4.0))
-        self.tf_listener.waitForTransform("/base_footprint", "/odom", rospy.Time.now(), rospy.Duration(4.0))
+        self.tf_listener.waitForTransform("/base_footprint", "/odom", rospy.Time(0), rospy.Duration(4.0))
         mat44 = self.tf_listener.asMatrix('/base_footprint', self.odom_header)
         def xf(p):
             xyz = list(numpy.dot(mat44, numpy.array([p[1], p[0], 0.0, 1.0])))[:3]
