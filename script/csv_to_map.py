@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
+import rospkg
 import csv
 from nav_msgs.msg import OccupancyGrid
 from std_msgs.msg import Header
@@ -48,8 +49,14 @@ def csv_to_gridmap(csv_data):
 if __name__ == "__main__":
     rospy.init_node("csv_to_map", anonymous=True)
     map_pub = rospy.Publisher("/csv_map", OccupancyGrid, queue_size=1)
-    left_wall_csv_data = read_csv("../csv_map/geofence_left_total.csv")
-    right_wall_csv_data = read_csv("../csv_map/geofence_right_total.csv")
+
+    rospack = rospkg.RosPack()
+    left_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_left_total.csv"
+    right_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_right_total.csv"
+
+    self.left_wall_csv_data = self.read_csv(left_geofence_path)
+    self.right_wall_csv_data = self.read_csv(right_geofence_path)
+
     csv_data = left_wall_csv_data
     [csv_data.append(element) for element in right_wall_csv_data]
     csv_map = csv_to_gridmap(csv_data)
