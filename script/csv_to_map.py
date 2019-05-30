@@ -54,8 +54,8 @@ if __name__ == "__main__":
     left_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_left_total.csv"
     right_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_right_total.csv"
 
-    self.left_wall_csv_data = self.read_csv(left_geofence_path)
-    self.right_wall_csv_data = self.read_csv(right_geofence_path)
+    left_wall_csv_data = read_csv(left_geofence_path)
+    right_wall_csv_data = read_csv(right_geofence_path)
 
     csv_data = left_wall_csv_data
     [csv_data.append(element) for element in right_wall_csv_data]
