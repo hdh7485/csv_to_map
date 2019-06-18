@@ -17,8 +17,8 @@ class CSVRepublisher:
         rospy.init_node("csv_to_map", anonymous=True)
 
         rospack = rospkg.RosPack()
-        left_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_left_total.csv"
-        right_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_right_total.csv"
+        left_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_first_lane.csv"
+        right_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_right_shift.csv"
 
         self.left_wall_csv_data = self.read_csv(left_geofence_path)
         self.right_wall_csv_data = self.read_csv(right_geofence_path)
