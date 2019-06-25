@@ -1,16 +1,19 @@
 #!/usr/bin/env python
-
 import rospy
 import rospkg
 import csv
 import numpy
 import time
-from tf import TransformListener
+
 from geometry_msgs.msg import PoseArray
 from geometry_msgs.msg import Pose
 from nav_msgs.msg import OccupancyGrid
 from std_msgs.msg import Header
 from sensor_msgs.msg import PointCloud2 
+
+import tf2_ros
+import tf2_py as tf2
+from tf2_geometry_msgs.tf2_geometry_msgs import transform_to_kdl
 
 class CSVRepublisher:
     def __init__(self):
@@ -27,7 +30,9 @@ class CSVRepublisher:
 
         self.odom_header = Header()
         self.odom_header.frame_id = "/odom"
-        self.tf_listener = TransformListener()
+
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(tf_buffer)
 
         self.map_pub = rospy.Publisher("/csv_override_map", OccupancyGrid, queue_size=1)
         self.pose_array_pub = rospy.Publisher("/csv_pose_array", PoseArray, queue_size=1)
@@ -53,38 +58,22 @@ class CSVRepublisher:
 
         pose_array = PoseArray()
         for point in self.tf_csv_data:    
-            '''
-            pose = Pose()
-            pose.position.x = point[0]
-            pose.position.y = point[1]
-            pose.position.z = 0
-            pose.orientation.x = 0
-            pose.orientation.y = 0
-            pose.orientation.z = 0
-            pose.orientation.w = 1
-            pose_array.poses.append(pose)
-            '''
-
             index = int((point[1] - map_data.info.origin.position.y)/map_data.info.resolution) * int(map_data.info.width) + int((point[0] - map_data.info.origin.position.x)/map_data.info.resolution)
 
-            #if index < len(out_data) and index > -len(out_data):
             if index < len(out_data) and index >= 0:
                 #rospy.loginfo("%d", index)
                 out_data[index] = 100
 
         out_map.data = tuple(out_data)
         self.map_pub.publish(out_map)
-        #self.pose_array_pub.publish(pose_array)
     
     def csv_transform(self, csv_data):
-        #self.odom_header.stamp = rospy.Time.now()
-        #self.tf_listener.waitForTransform("/base_footprint", "/odom", rospy.Time.now(), rospy.Duration(4.0))
-        self.tf_listener.waitForTransform("/base_footprint", "/odom", rospy.Time(0), rospy.Duration(4.0))
-        mat44 = self.tf_listener.asMatrix('/base_footprint', self.odom_header)
-        def xf(p):
-            xyz = list(numpy.dot(mat44, numpy.array([p[1], p[0], 0.0, 1.0])))[:3]
-            return xyz
-        r = [xf(p) for p in csv_data]
+        #self.tf_listener.waitForTransform("/base_footprint", "/odom", rospy.Time(0), rospy.Duration(4.0))
+        trans = tf_buffer.lookup_transform('/base_footprint', '/odom',
+                                           rospy.Time(0),
+                                           rospy.Duration(4.0))
+        r = [transform_to_kdl(trans) * PyKDL.Vector(p[1], p[0], 0.0) for p in csv_data]
+        
         return r
 
     def run(self):
