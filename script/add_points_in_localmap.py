@@ -14,6 +14,7 @@ from sensor_msgs.msg import PointCloud2
 import tf2_ros
 import tf2_py as tf2
 from tf2_geometry_msgs.tf2_geometry_msgs import transform_to_kdl
+import PyKDL
 
 class CSVRepublisher:
     def __init__(self):
@@ -32,7 +33,7 @@ class CSVRepublisher:
         self.odom_header.frame_id = "/odom"
 
         self.tf_buffer = tf2_ros.Buffer()
-        self.tf_listener = tf2_ros.TransformListener(tf_buffer)
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
 
         self.map_pub = rospy.Publisher("/csv_override_map", OccupancyGrid, queue_size=1)
         self.pose_array_pub = rospy.Publisher("/csv_pose_array", PoseArray, queue_size=1)
@@ -69,7 +70,7 @@ class CSVRepublisher:
     
     def csv_transform(self, csv_data):
         #self.tf_listener.waitForTransform("/base_footprint", "/odom", rospy.Time(0), rospy.Duration(4.0))
-        trans = tf_buffer.lookup_transform('/base_footprint', '/odom',
+        trans = self.tf_buffer.lookup_transform('base_footprint', 'odom',
                                            rospy.Time(0),
                                            rospy.Duration(4.0))
         r = [transform_to_kdl(trans) * PyKDL.Vector(p[1], p[0], 0.0) for p in csv_data]
