@@ -50,7 +50,9 @@ class CSVRepublisher:
         return csv_data
     
     def map_callback(self, map_data):
+        time1 = time.time()
         self.tf_csv_data = self.csv_transform(self.entire_csv_data)
+        time2 = time.time()
 
         out_map = map_data
         out_map.header.frame_id = "/base_footprint"
@@ -58,30 +60,36 @@ class CSVRepublisher:
         out_data = list(out_map.data)
 
         pose_array = PoseArray()
+        time3 = time.time()
         for point in self.tf_csv_data:    
             index = int((point[1] - map_data.info.origin.position.y)/map_data.info.resolution) * int(map_data.info.width) + int((point[0] - map_data.info.origin.position.x)/map_data.info.resolution)
-
             if index < len(out_data) and index >= 0:
                 #rospy.loginfo("%d", index)
                 out_data[index] = 100
 
         out_map.data = tuple(out_data)
+        time4 = time.time()
+
         self.map_pub.publish(out_map)
+        time5 = time.time()
+        rospy.loginfo("%f %f %f %f", time2 - time1, time3 - time2, time4 - time3, time5 - time4)
     
     def csv_transform(self, csv_data):
         #self.tf_listener.waitForTransform("/base_footprint", "/odom", rospy.Time(0), rospy.Duration(4.0))
         trans = self.tf_buffer.lookup_transform('base_footprint', 'odom',
                                            rospy.Time(0),
                                            rospy.Duration(4.0))
-        r = [transform_to_kdl(trans) * PyKDL.Vector(p[1], p[0], 0.0) for p in csv_data]
+        t_kdl = transform_to_kdl(trans) 
+        r = [t_kdl * PyKDL.Vector(p[1], p[0], 0.0) for p in csv_data]
         
         return r
 
     def run(self):
-        r = rospy.Rate(10)
-        while not rospy.is_shutdown():
-            rospy.spin()
-            r.sleep()
+        rospy.spin()
+        #r = rospy.Rate(100)
+        #while not rospy.is_shutdown():
+        #    rospy.spin()
+        #    r.sleep()
 
 if __name__ == "__main__":
     repub = CSVRepublisher()
