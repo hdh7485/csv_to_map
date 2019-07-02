@@ -57,6 +57,7 @@ class CSVRepublisher:
 
     def mission_num_callback(self, hyundai_data):
         self.mission_number = hyundai_data.mission_number
+        rospy.loginfo("%d", self.mission_number)
         
     
     def map_callback(self, map_data):
@@ -74,7 +75,6 @@ class CSVRepublisher:
             time3 = time.time()
             for point in self.tf_csv_data:    
                 index = int((point[1] - map_data.info.origin.position.y)/map_data.info.resolution) * int(map_data.info.width) + int((point[0] - map_data.info.origin.position.x)/map_data.info.resolution)
-                #rospy.loginfo("%d", index)
                 if index < len(out_data) and index >= 0:
                     out_data[index] = 100
 
