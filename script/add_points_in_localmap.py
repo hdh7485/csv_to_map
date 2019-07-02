@@ -60,15 +60,15 @@ class CSVRepublisher:
         
     
     def map_callback(self, map_data):
+        out_map = map_data
+        out_map.header.frame_id = "/base_footprint"
+        out_map.header.stamp = rospy.Time.now()
+        out_data = list(out_map.data)
+
         if self.mission_number == 6:
             time1 = time.time()
             self.tf_csv_data = self.csv_transform(self.entire_csv_data)
             time2 = time.time()
-
-            out_map = map_data
-            out_map.header.frame_id = "/base_footprint"
-            out_map.header.stamp = rospy.Time.now()
-            out_data = list(out_map.data)
 
             pose_array = PoseArray()
             time3 = time.time()
@@ -84,6 +84,8 @@ class CSVRepublisher:
             self.map_pub.publish(out_map)
             time5 = time.time()
             #rospy.loginfo("%f %f %f %f", time2 - time1, time3 - time2, time4 - time3, time5 - time4)
+        else:
+            self.map_pub.publish(out_map)
     
     def csv_transform(self, csv_data):
         #self.tf_listener.waitForTransform("/base_footprint", "/odom", rospy.Time(0), rospy.Duration(4.0))
