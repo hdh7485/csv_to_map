@@ -26,15 +26,15 @@ class CSVRepublisher:
         #left_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_first_lane.csv"
         left_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_left_lane.csv"
         right_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_right_shift.csv"
-        first_lane_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_first_lane.csv"
+        #first_lane_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_first_lane.csv"
 
         self.left_wall_csv_data = self.read_csv(left_geofence_path)
         self.right_wall_csv_data = self.read_csv(right_geofence_path)
-        self.first_lane_csv_data = self.read_csv(first_lane_geofence_path)
+        #self.first_lane_csv_data = self.read_csv(first_lane_geofence_path)
 
         self.entire_csv_data = self.left_wall_csv_data
         [self.entire_csv_data.append(element) for element in self.right_wall_csv_data]
-        [self.entire_csv_data.append(element) for element in self.first_lane_csv_data]
+        #[self.entire_csv_data.append(element) for element in self.first_lane_csv_data]
         #self.entire_csv_data = self.right_wall_csv_data
 
         self.odom_header = Header()
