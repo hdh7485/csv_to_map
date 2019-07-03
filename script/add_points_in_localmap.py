@@ -16,6 +16,7 @@ import tf2_ros
 import tf2_py as tf2
 from tf2_geometry_msgs.tf2_geometry_msgs import transform_to_kdl
 import PyKDL
+import math
 
 class CSVRepublisher:
     def __init__(self):
@@ -25,11 +26,15 @@ class CSVRepublisher:
         #left_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_first_lane.csv"
         left_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_left_lane.csv"
         right_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_right_shift.csv"
+        first_lane_geofence_path = rospack.get_path("csv_to_map") + "/csv_map/geofence_first_lane.csv"
 
         self.left_wall_csv_data = self.read_csv(left_geofence_path)
         self.right_wall_csv_data = self.read_csv(right_geofence_path)
+        self.first_lane_csv_data = self.read_csv(first_lane_geofence_path)
+
         self.entire_csv_data = self.left_wall_csv_data
         [self.entire_csv_data.append(element) for element in self.right_wall_csv_data]
+        [self.entire_csv_data.append(element) for element in self.first_lane_csv_data]
         #self.entire_csv_data = self.right_wall_csv_data
 
         self.odom_header = Header()
@@ -39,6 +44,7 @@ class CSVRepublisher:
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
 
         self.mission_number = 0
+        self.euclidean_distance = 10000.0
 
         self.map_pub = rospy.Publisher("/csv_override_map", OccupancyGrid, queue_size=1)
         self.pose_array_pub = rospy.Publisher("/csv_pose_array", PoseArray, queue_size=1)
@@ -57,7 +63,9 @@ class CSVRepublisher:
 
     def mission_num_callback(self, hyundai_data):
         self.mission_number = hyundai_data.mission_number
-        rospy.loginfo("%d", self.mission_number)
+        self.euclidean_distance = math.sqrt((hyundai_data.pos_x - 61) ** 2 
+                                      + (hyundai_data.pos_y - 316) ** 2)
+        rospy.loginfo("%d %f", self.mission_number, self.euclidean_distance)
         
     
     def map_callback(self, map_data):
@@ -65,8 +73,8 @@ class CSVRepublisher:
         out_map.header.frame_id = "/base_footprint"
         out_map.header.stamp = rospy.Time.now()
         out_data = list(out_map.data)
-
-        if self.mission_number == 6:
+        #if self.mission_number == 6:
+        if self.euclidean_distance < 30 or self.mission_number == 6:
             time1 = time.time()
             self.tf_csv_data = self.csv_transform(self.entire_csv_data)
             time2 = time.time()
@@ -88,7 +96,6 @@ class CSVRepublisher:
             self.map_pub.publish(out_map)
     
     def csv_transform(self, csv_data):
-        #self.tf_listener.waitForTransform("/base_footprint", "/odom", rospy.Time(0), rospy.Duration(4.0))
         trans = self.tf_buffer.lookup_transform('base_footprint', 'odom',
                                            rospy.Time(0),
                                            rospy.Duration(4.0))
